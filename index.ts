@@ -1,8 +1,8 @@
 interface ISO8583 {
-    MessageTypeIndicator: string;
-    PrimaryBitmap: string;
-    SecondaryBitmap?: string;
-    DataElements: DataElement[];
+    messageTypeIndicator: string;
+    primaryBitmap: string;
+    secondaryBitmap?: string;
+    dataElements: DataElement[];
 }
 
 interface DataElementDescriptor {
@@ -230,8 +230,8 @@ let dataElementDescriptors: DataElementDescriptor[] = [
     {
         position: 32,
         name: "Acquiring Institution Identification Code",
-        length: 2, // Variable to 11
-        dataElementType: DataElementType.Variable
+        length: 11, // Variable to 11
+        dataElementType: DataElementType.Fixed
     },
     {
         position: 33,
@@ -890,17 +890,17 @@ let parse = (message: string): ISO8583 => {
         presentDataElements = presentDataElements.concat(getPresentElements(secondaryBitmap));
         helper(message.substring(36));
         return {
-            MessageTypeIndicator: messageTypeIndicator,
-            PrimaryBitmap: primaryBitmap,
-            SecondaryBitmap: secondaryBitmap,
-            DataElements: dataElements
+            messageTypeIndicator: messageTypeIndicator,
+            primaryBitmap: primaryBitmap,
+            secondaryBitmap: secondaryBitmap,
+            dataElements: dataElements
         }
     } else {
         helper(message.substring(20));
         return {
-            MessageTypeIndicator: messageTypeIndicator,
-            PrimaryBitmap: primaryBitmap,
-            DataElements: dataElements
+            messageTypeIndicator: messageTypeIndicator,
+            primaryBitmap: primaryBitmap,
+            dataElements: dataElements
         };
     }
 }
@@ -915,6 +915,10 @@ let generate = (elements: DataElement[]) => {
     elements.forEach(element => {
         // Position is 1-indexed, but the lookup is 0-indexed
         let position = element.position - 1;
+        if (position > 127) {
+            // Somehow got invalid position value. Throw error or something
+            return;
+        }
         presentElements[position] = true;
         // Secondary bitmap is present
         if (position > 63) {
