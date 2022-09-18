@@ -1,0 +1,155 @@
+<html>
+
+<head>
+    <title>ISO 8583 Example</title>
+    <script src="iso8583.js" lang="text/javascript"></script>
+    <script lang="text/javascript">
+        var dataElements = [];
+        function showParse() {
+            var parseDiv = document.getElementById("parsing");
+            parseDiv.style.display = "block";
+
+            var genDiv = document.getElementById("generation");
+            genDiv.style.display = "none";
+        }
+        function showGenerate() {
+            var parseDiv = document.getElementById("parsing");
+            parseDiv.style.display = "none";
+
+            var genDiv = document.getElementById("generation");
+            genDiv.style.display = "block";
+        }
+        function parseMessage() {
+            var element = document.getElementById("input");
+            var parsed = parse(element.value);
+
+            var mti = document.getElementById("messageType");
+            mti.innerText = parsed.messageTypeIndicator;
+
+            var table = document.getElementById("table");
+            var tbody = table.getElementsByTagName("tbody")[0];
+            for (var i = 0; i < parsed.dataElements.length; i++) {
+                var row = parsed.dataElements[i];
+                var tr = document.createElement("tr");
+                var td1 = document.createElement("td");
+                td1.textContent = row.position;
+                var td2 = document.createElement("td");
+                td2.textContent = row.data;
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tbody.appendChild(tr);
+            }
+        }
+        function clearElement(id) {
+            var element = document.getElementById(id);
+            element.value = "";
+
+            if (id == "generatedMessage") {
+                cleanup();
+            }
+        }
+        function addDataElement() {
+            var p = document.getElementById("position");
+            if (p.value > 127) {
+                return;
+            }
+            var v = document.getElementById("value");
+            var n = dataElements.findIndex(element => element.position == p.value);
+            if (n < 0) {
+                dataElements.push({
+                    position: p.value,
+                    value: v.value
+                });
+            }
+            let message = generate(dataElements);
+            var element = document.getElementById("generatedMessage");
+            element.value = message;
+            var presentElements = document.getElementById("presentElements");
+            var temp = dataElements.map(element => element.position).sort((a, b) => a - b);
+            presentElements.innerText = temp.join(", ");
+        }
+        function removeDataElement() {
+            var p = document.getElementById("position");
+            if (p.value > 127) {
+                return;
+            }
+            var v = document.getElementById("value");
+            var n = dataElements.findIndex(element => element.position == p.value);
+            if (n >= 0) {
+                dataElements.splice(n, 1);
+            }
+            var element = document.getElementById("generatedMessage");
+            if (dataElements.length == 0) {
+                element.value = "";
+            } else {
+                let message = generate(dataElements);
+                element.value = message;
+            }
+            var presentElements = document.getElementById("presentElements");
+            var temp = dataElements.map(element => element.position).sort((a, b) => a - b);
+            presentElements.innerText = temp.join(", ");
+        }
+        function cleanup() {
+            var element = document.getElementById("generatedMessage");
+            if (element.value == "") {
+                dataElements.splice(0);
+                var s = document.getElementById("presentElements");
+                s.innerText = "";
+            }
+        }
+    </script>
+    <style lang="text/css">
+        .form-label {
+            display: inline-block;
+            width: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="showParse()">Parse Message</button>
+    <button onclick="showGenerate()">Generate Message</button>
+    <div id="parsing">
+        <textarea id="input"></textarea>
+        <button onclick="parseMessage()">Parse</button>
+        <button onclick="clearElement('input')">Clear</button>
+        <div id="parseResults">
+            <span>Message Type: </span><span id="messageType"></span>
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows added via parseMessage -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="generation" style="display: none">
+        <div id="elements" onclick="showInput()"></div>
+        <div>
+            <div>
+                <label class="form-label" for="position">Position</label>
+                <input id="position" type="text">
+            </div>
+            <div>
+                <label class="form-label" for="value">Value</label>
+                <input id="value" type="text" value="Hello">
+            </div>
+            <button onclick="addDataElement()">Add</button>
+            <button onclick="removeDataElement()">Remove</button>
+        </div>
+        <button onclick="clearElement('generatedMessage')" onemptied="cleanup()">Clear</button>
+        <div>
+            <div>
+                <span>Elements: </span><span id="presentElements"></span>
+            </div>
+            <textarea id="generatedMessage"></textarea>
+        </div>
+    </div>
+</body>
+
+</html>
