@@ -942,6 +942,9 @@ let generate = (elements: DataElement[]) => {
                 break;
         }
     });
+    if (!presentElements[0]) {
+        presentElements = presentElements.slice(0, 63);
+    }
     let bitmap = generateBitmap(presentElements);
     return bitmap + result;
 }
