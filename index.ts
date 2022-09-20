@@ -933,7 +933,7 @@ let generate = (elements: DataElement[]) => {
                 if (element.value.length < descriptor.length) {
                     value = element.value;
                 } else {
-                    element.value.slice(0, descriptor.length);
+                    value = element.value.slice(0, descriptor.length);
                 }
                 result += value
                 break;
