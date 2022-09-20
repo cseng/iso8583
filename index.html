@@ -20,7 +20,7 @@
             genDiv.style.display = "block";
         }
         function parseMessage() {
-            var element = document.getElementById("input");
+            var element = document.getElementById("messageInput");
             var parsed = parse(element.value);
 
             var mti = document.getElementById("messageType");
@@ -28,6 +28,12 @@
 
             var table = document.getElementById("table");
             var tbody = table.getElementsByTagName("tbody")[0];
+            // Case where user clicks parse multiple times
+            if (tbody) {
+                table.removeChild(tbody);
+            }
+            tbody = document.createElement("tbody");
+            table.appendChild(tbody);
             for (var i = 0; i < parsed.dataElements.length; i++) {
                 var row = parsed.dataElements[i];
                 var tr = document.createElement("tr");
@@ -39,20 +45,40 @@
                 tr.appendChild(td2);
                 tbody.appendChild(tr);
             }
+            var parseResults = document.getElementById("parseResults");
+            parseResults.style.display = "block";
         }
         function clearElement(id) {
             var element = document.getElementById(id);
             element.value = "";
 
+            if (id == "messageInput") {
+                var table = document.getElementById("table");
+                var tbody = table.getElementsByTagName("tbody")[0];
+                table.removeChild(tbody);
+                // var rows = tbody.getElementsByTagName("tr");
+                // for (var i = 0; i < rows.length; i++) {
+                //     tbody.removeChild(rows[i]);
+                // }
+                var parseResults = document.getElementById("parseResults");
+                parseResults.style.display = "none";
+            }
             if (id == "generatedMessage") {
                 cleanup();
             }
         }
-        function addDataElement() {
-            var p = document.getElementById("position");
-            if (p.value > 127) {
-                return;
+        function initializePositions() {
+            var select = document.getElementById("positions");
+            for (var i = 0; i < 128; i++) {
+                var option = document.createElement("option");
+                var value = document.createAttribute("value");
+                option.setAttribute("value", i + 1);
+                option.innerText = i + 1;
+                select.appendChild(option);
             }
+        }
+        function addDataElement() {
+            var p = document.getElementById("positions");
             var v = document.getElementById("value");
             var n = dataElements.findIndex(element => element.position == p.value);
             if (n < 0) {
@@ -69,10 +95,7 @@
             presentElements.innerText = temp.join(", ");
         }
         function removeDataElement() {
-            var p = document.getElementById("position");
-            if (p.value > 127) {
-                return;
-            }
+            var p = document.getElementById("positions");
             var v = document.getElementById("value");
             var n = dataElements.findIndex(element => element.position == p.value);
             if (n >= 0) {
@@ -99,55 +122,85 @@
         }
     </script>
     <style lang="text/css">
+        body {
+            display: flex;
+            align-items: center;
+            padding-top: 60px;
+            padding-bottom: 60px;
+        }
+
+        .main {
+            margin: auto;
+        }
+
         .form-label {
             display: inline-block;
             width: 100px;
         }
+
+        .section {
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
     </style>
 </head>
 
-<body>
-    <button onclick="showParse()">Parse Message</button>
-    <button onclick="showGenerate()">Generate Message</button>
-    <div id="parsing">
-        <textarea id="input"></textarea>
-        <button onclick="parseMessage()">Parse</button>
-        <button onclick="clearElement('input')">Clear</button>
-        <div id="parseResults">
-            <span>Message Type: </span><span id="messageType"></span>
-            <table id="table">
-                <thead>
-                    <tr>
-                        <th>Position</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Rows added via parseMessage -->
-                </tbody>
-            </table>
+<body onload="initializePositions()">
+    <div class="main">
+        <div class="section">
+            <button onclick="showParse()">Parse Message</button>
+            <button onclick="showGenerate()">Generate Message</button>
         </div>
-    </div>
-    <div id="generation" style="display: none">
-        <div id="elements" onclick="showInput()"></div>
-        <div>
-            <div>
-                <label class="form-label" for="position">Position</label>
-                <input id="position" type="text">
+        <div id="parsing">
+            <div class="section"">
+                <textarea id=" messageInput" cols="60" rows="15"></textarea>
             </div>
-            <div>
-                <label class="form-label" for="value">Value</label>
-                <input id="value" type="text" value="Hello">
+            <div class="section">
+                <button onclick="parseMessage()">Parse</button>
+                <button onclick="clearElement('messageInput')">Clear</button>
             </div>
-            <button onclick="addDataElement()">Add</button>
-            <button onclick="removeDataElement()">Remove</button>
+            <div id="parseResults" style="display: none;">
+                <h3>Message Type: </h3><span id="messageType"></span>
+                <table id="table">
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows added via parseMessage -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <button onclick="clearElement('generatedMessage')" onemptied="cleanup()">Clear</button>
-        <div>
+        <div id="generation" style="display: none">
+            <div id="elements" onclick="showInput()"></div>
             <div>
-                <span>Elements: </span><span id="presentElements"></span>
+                <div>
+                    <label class="form-label" for="position">Position</label>
+                    <select id="positions"></select>
+                </div>
+                <div>
+                    <label class="form-label" for="value">Value</label>
+                    <input id="value" type="text">
+                </div>
+                <div class="section">
+                    <button onclick="addDataElement()">Add</button>
+                    <button onclick="removeDataElement()">Remove</button>
+                </div>
             </div>
-            <textarea id="generatedMessage"></textarea>
+            <div>
+                <div class="section">
+                    <span>Elements: </span><span id="presentElements"></span>
+                </div>
+                <div class="section">
+                    <textarea id="generatedMessage" cols="60" rows="15"></textarea>
+                </div>
+                <div class="section">
+                    <button onclick="clearElement('generatedMessage')" onemptied="cleanup()">Clear</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
